@@ -3,6 +3,7 @@ import * as $ from "jquery";
 
 const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
+const $episodesList = $("#episodesList");
 const $searchForm = $("#searchForm");
 
 const BASE_URL = "https://api.tvmaze.com/";
@@ -13,6 +14,13 @@ interface ShowInterface {
   name: string;
   summary: string;
   image: string;
+}
+
+interface EpisodeInterface {
+  id: number; 
+  name: string; 
+  season: number; 
+  number: number;
 }
 
 /** Given a search term, search for tv shows that match that query.
@@ -30,11 +38,15 @@ async function getShowsByTerm(term: string): Promise<ShowInterface[]> {
     method: "GET",
   });
 
-  //TODO: Need to check the type of image and transition a default incase
   return response.data.map((resultShow) => {
     const show = resultShow.show;
     const { id, name, summary, image } = show;
-    return { id, name, summary, image };
+    return { 
+      id, 
+      name, 
+      summary, 
+      image : image ? image.medium : DEFAULT_IMAGE
+    };
   });
 
   // return [
@@ -56,7 +68,11 @@ async function getShowsByTerm(term: string): Promise<ShowInterface[]> {
   // ];
 }
 
-/** Given list of shows, create markup for each and to DOM */
+/** Given list of shows, create markup for each and to DOM 
+ * 
+ *  returns: 
+ *  [{id: 1234, name: "Pilot", season: "1", number: "1"}, ...]
+*/
 
 function populateShows(shows) {
   $showsList.empty();
@@ -66,8 +82,8 @@ function populateShows(shows) {
       `<div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
-              src="http://static.tvmaze.com/uploads/images/medium_portrait/160/401704.jpg"
-              alt="Bletchly Circle San Francisco"
+              src=${show.image}
+              alt="${show.image} photo"
               class="w-25 mr-3">
            <div class="media-body">
              <h5 class="text-primary">${show.name}</h5>
@@ -106,8 +122,43 @@ $searchForm.on("submit", async function (evt) {
  *      { id, name, season, number }
  */
 
-// async function getEpisodesOfShow(id) { }
+async function getEpisodesOfShow(id: number): Promise<EpisodeInterface[]> {
+  const response = await axios({
+    url: `${BASE_URL}shows/${id}/episodes`,
+    method: "GET",
+  });
+  console.log("response.data", response.data);
 
-/** Write a clear docstring for this function... */
+  return response.data.map((resultEpisode) => {
+    console.log({resultEpisode});
+    const { id, name, season, number } = resultEpisode;
+    return { 
+      id, 
+      name, 
+      season,
+      number,
+    };
+  });
+}
 
-// function populateEpisodes(episodes) { }
+/** Function is provided an array of episodes info, 
+ *  and populates that into the #episodesList part 
+ *  of the DOM */
+
+function populateEpisodes(episodes) {
+  $episodesList.empty();
+  for (let episode of episodes) {
+    const $listItem = $(`<li>${episode.name} (Season: ${episode.season}, Number: ${episode.number})</li>`);
+    $episodesList.append($listItem);
+  }
+
+  $episodesArea.show();
+ }
+
+const $episodesButton = $(".Show-getEpisodes");
+
+$showsList.on("click", ".Show-getEpisodes", async function (evt) {
+  const $showId = $(evt.target).closest(".Show").data("show-id");
+  const episodes = await getEpisodesOfShow($showId);
+  populateEpisodes(episodes);
+})
