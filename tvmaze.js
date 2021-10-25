@@ -13211,7 +13211,6 @@ function populateEpisodes(episodes) {
     }
     $episodesArea.show();
 }
-var $episodesButton = $(".Show-getEpisodes");
 $showsList.on("click", ".Show-getEpisodes", function (evt) {
     return __awaiter(this, void 0, void 0, function () {
         var $showId, episodes;

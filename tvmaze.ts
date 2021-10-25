@@ -155,8 +155,6 @@ function populateEpisodes(episodes) {
   $episodesArea.show();
  }
 
-const $episodesButton = $(".Show-getEpisodes");
-
 $showsList.on("click", ".Show-getEpisodes", async function (evt) {
   const $showId = $(evt.target).closest(".Show").data("show-id");
   const episodes = await getEpisodesOfShow($showId);
